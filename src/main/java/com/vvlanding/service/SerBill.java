@@ -786,7 +786,6 @@ public class SerBill {
                 String to = formatter.format(date);
                 query = from + "/" + to;
             }
-            System.out.println(query);
             String[] newData = query.split("/");
             String fromData = newData[0];
             String toData = newData[1];

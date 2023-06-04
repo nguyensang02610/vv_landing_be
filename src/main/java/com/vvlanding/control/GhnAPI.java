@@ -35,7 +35,7 @@ public class GhnAPI {
 
     @RequestMapping(value = "/order/{shopId}", method = RequestMethod.POST)
     @CrossOrigin(origins = "*", maxAge = 3600)
-    public ResponseEntity<?> orderGHN(@CurrentUser UserPrincipal currentUser, @RequestParam long billId, @RequestParam String name, @PathVariable long shopId, @RequestParam long shopGhnId) throws URISyntaxException {
+    public ResponseEntity<?> orderGHN(@CurrentUser UserPrincipal currentUser, @RequestParam String billId, @RequestParam String name, @PathVariable long shopId, @RequestParam long shopGhnId) throws URISyntaxException {
         ShopInfo shopInfo = serShopInfo.checkShopFindId(shopId, currentUser);
         if (shopInfo == null || shopInfo.equals(null)) {
             ResponseStatusMessage statusMessage = new ResponseStatusMessage(false, "Không tìm thấy thông tin shop",
@@ -49,7 +49,7 @@ public class GhnAPI {
 
     @RequestMapping(value = "/cancel/{shopId}", method = RequestMethod.GET)
     @CrossOrigin(origins = "*", maxAge = 3600)
-    public ResponseEntity<?> cancel(@CurrentUser UserPrincipal currentUser, @RequestParam Long id, @PathVariable long shopId, @RequestParam String shopGhnId) throws URISyntaxException, JsonProcessingException {
+    public ResponseEntity<?> cancel(@CurrentUser UserPrincipal currentUser, @RequestParam String id, @PathVariable long shopId, @RequestParam String shopGhnId) throws URISyntaxException, JsonProcessingException {
         ShopInfo shopInfo = serShopInfo.checkShopFindId(shopId, currentUser);
         if (shopInfo == null || shopInfo.equals(null)) {
             ResponseStatusMessage statusMessage = new ResponseStatusMessage(false, "Không tìm thấy thông tin shop",

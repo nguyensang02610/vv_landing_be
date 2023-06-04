@@ -30,10 +30,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Controller
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RequestMapping("api/bill")
 public class ContBill {
+
+    private static final Logger logger = LoggerFactory.getLogger(ContBill.class);
 
     @Autowired
     SerBill serBill;

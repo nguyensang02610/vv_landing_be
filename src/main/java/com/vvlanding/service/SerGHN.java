@@ -23,6 +23,9 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class SerGHN {
 
@@ -44,7 +47,10 @@ public class SerGHN {
 
     private static final String GHN_GET_LIST_SHOP = "https://online-gateway.ghn.vn/shiip/public-api/v2/shop/all";
 
+    private static final Logger logger = LoggerFactory.getLogger(SerGHN.class);
+
     private static RestTemplate restTemplate = new RestTemplate();
+
 
     @Autowired
     private RepoShipped repoShipped;
@@ -85,8 +91,7 @@ public class SerGHN {
     @Autowired
     SimpMessagingTemplate template;
 
-    // tạo đơn
-    public ResponseEntity createOrder(Long billId, String name, Long shopId, Long shopGhnId) throws RestClientException, URISyntaxException {
+    public ResponseEntity pushOrder(Long billId, String name, Long shopId, Long shopGhnId)throws RestClientException, URISyntaxException{
         Map<String, Object> responses = new HashMap<>();
         HttpHeaders headers = new HttpHeaders();
         restTemplate.getMessageConverters()
@@ -136,8 +141,6 @@ public class SerGHN {
             mapper = mapper.setSerializationInclusion(Include.NON_NULL);
             mapper = mapper.setSerializationInclusion(Include.NON_DEFAULT);
 
-            System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ghnOrder));
-
             HttpEntity<String> entity = new HttpEntity<String>(mapper.writeValueAsString(ghnOrder), headers);
             GHNResponseDTO response = restTemplate.postForObject(new URI(GHN_ORDER), entity,
                     GHNResponseDTO.class);
@@ -178,13 +181,22 @@ public class SerGHN {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-
         return null;
     }
 
+    // tạo đơn
+    public ResponseEntity createOrder(String billId, String name, Long shopId, Long shopGhnId) throws RestClientException, URISyntaxException {
+        String[] billIdArray = billId.split(","); // Tách chuỗi thành mảng các giá trị
 
-    //hủy đơn hàng
-    public ResponseEntity<GHNCancelResponseDTO> cancel(Long id, Long shopId, String shopGhnId) throws JsonProcessingException, URISyntaxException {
+        for (String billid : billIdArray) {
+            Long id = Long.parseLong(billid.trim()); // Chuyển đổi giá trị thành kiểu Long
+            ResponseEntity response = pushOrder(id, name, shopId, shopGhnId); // Gọi đến phương thức pushOrder()
+        }
+        return null;
+    }
+
+    //Hủy nhiều đơn hàng
+    public ResponseEntity<GHNCancelResponseDTO> orderCancel(Long id, Long shopId, String shopGhnId) throws JsonProcessingException, URISyntaxException {
         HttpHeaders headers = new HttpHeaders();
         ObjectMapper mapper = new ObjectMapper();
         GHNOrderCodeList orderCode = new GHNOrderCodeList();
@@ -200,7 +212,6 @@ public class SerGHN {
 
             arr.add(mapGHN.get().getGhnOrderResponse().getOrderCode());
             orderCode.setOrderCodes(arr);
-            System.out.println(mapper.writeValueAsString(orderCode));
             HttpEntity<String> entity = new HttpEntity<String>(mapper.writeValueAsString(orderCode), headers);
             ResponseEntity<GHNCancelResponseDTO> response = restTemplate.exchange(new URI(GHN_CANCEL), HttpMethod.POST, entity, GHNCancelResponseDTO.class);
             if (response.getBody().getCode() == 200 || response.getBody().getMessage().contains("OK")){
@@ -216,6 +227,20 @@ public class SerGHN {
         }
         return null;
     }
+
+    //hủy đơn hàng
+    public ResponseEntity<GHNCancelResponseDTO> cancel(String id, Long shopId, String shopGhnId) throws JsonProcessingException, URISyntaxException {
+        logger.info("Id order : {}", id);
+        String[] IdArray = id.split(","); // Tách chuỗi thành mảng các giá trị
+
+        for (String orderId : IdArray) {
+            Long ID = Long.parseLong(orderId.trim()); // Chuyển đổi giá trị thành kiểu Long
+            ResponseEntity response = orderCancel(ID, shopId, shopGhnId); // Gọi đến phương thức ordercanel()
+        }
+        return null;
+    }
+
+
     // giao lại đơn hàng
     public GHNCancelResponseDTO deliveryAgain(Long billId, Long shopGhnId){
         HttpHeaders headers = new HttpHeaders();
@@ -243,7 +268,6 @@ public class SerGHN {
 
     //Tính tiền vận chuyển
     public ResponseEntity<GHNFeeResponseDTO> fee(FeeGHN fee, Long billId, String name, Long shopId, Long shopGhnId) throws JsonProcessingException, URISyntaxException {
-
         ObjectMapper mapper = new ObjectMapper();
         HttpHeaders headers = new HttpHeaders();
 

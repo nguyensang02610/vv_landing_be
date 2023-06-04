@@ -23,12 +23,12 @@ import java.util.*;
 public class SerGhtkService {
 
     private static String GHTK_Order = "https://services.giaohangtietkiem.vn/services/shipment/order/?ver=1.5";
-    private static String GHTK_Order_TEST = "https://services.ghtklab.com/services/shipment/order/?ver=1.5";
+    private static String GHTK_Order_TEST = "https://services.giaohangtietkiem.vn/services/shipment/order/?ver=1.5";
     private static String GHTK_Status = "https://services.giaohangtietkiem.vn/services/shipment/v2/";
     private static String GHTK_Cancel = "https://services.giaohangtietkiem.vn/services/shipment/cancel/";
     private static String GHTK_FEE_ENDPOINT = "https://services.giaohangtietkiem.vn/services/shipment/fee";
 
-    static RestTemplate restTemplate = new RestTemplate();
+    RestTemplate restTemplate = new RestTemplate();
 
     @Autowired
     private RepoBill repoBill;
@@ -119,7 +119,6 @@ public class SerGhtkService {
             mapper = mapper.setSerializationInclusion(Include.NON_DEFAULT);
 
             HttpEntity<DtoGHTKOrder> entity = new HttpEntity<DtoGHTKOrder>(dtoOrder, headers);
-
             String res = restTemplate.postForObject(new URI(GHTK_Order_TEST), entity, String.class);
             GHTKOrderResponseDTO response = mapper.readValue(res,GHTKOrderResponseDTO.class);
             if (response.isSuccess() == true) {
@@ -310,7 +309,6 @@ public class SerGhtkService {
 
                 ResponseEntity<GHTKOrderResponseDTO> response = restTemplate.exchange(new URI(url), HttpMethod.POST, entity, GHTKOrderResponseDTO.class);
                 ObjectMapper mapper = new ObjectMapper();
-                System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(response));
                 if (response.getBody().isSuccess() == true) {
                     Optional<Bill> bill = repoBill.findById(id);
                     Bill bill1 = bill.get();
